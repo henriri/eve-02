@@ -7,7 +7,6 @@ interface Props {
 }
 
 export default function Button({ label, id, onActivate, orange = false, wide = false }: Props) {
-  function handleDown() { onActivate(id) }
 
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
