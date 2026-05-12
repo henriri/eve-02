@@ -1,20 +1,56 @@
-/* ─── EVG—GS·01 — global ────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
+/* ─── EVG—GS·01 v2 ───────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'NHaasGroteskDS';
+  src: url('/fonts/NHaasGroteskDSPro-55Rg.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NHaasGroteskDS';
+  src: url('/fonts/NHaasGroteskDSPro-65Md.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NHaasGroteskDS';
+  src: url('/fonts/NHaasGroteskDSPro-75Bd.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'GeistMono';
+  src: url('/fonts/GeistMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'GeistMono';
+  src: url('/fonts/GeistMono-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
 
 :root {
-  --cream:      #F5F2EC;
-  --warm-grey:  #D8D4CB;
-  --mid-grey:   #A8A49C;
-  --dark-grey:  #4A4844;
-  --near-black: #1A1816;
-  --orange:     #D4410A;
-  --phosphor:   #E8A020;
-  --crt-bg:     #0A0800;
-  --shadow-light: rgba(255,255,255,0.7);
-  --shadow-dark:  rgba(0,0,0,0.35);
+  --body-bg:      #E8E4DC;
+  --panel-bg:     #EDEAE3;
+  --surface:      #F2EFE8;
+  --recessed:     #D8D4CC;
+  --border:       #C8C4BC;
+  --dark:         #1A1816;
+  --mid:          #6A6660;
+  --light:        #A8A49C;
+  --orange:       #D4410A;
+  --display-bg:   #080806;
+  --display-fg:   #F2F0E8;
 
-  --mono: 'IBM Plex Mono', 'Courier New', monospace;
-  --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --sans:  'NHaasGroteskDS', 'Helvetica Neue', Helvetica, sans-serif;
+  --mono:  'GeistMono', 'Courier New', monospace;
+
+  /* shadow system */
+  --shadow-up:   0 1px 0 rgba(255,255,255,0.8), 0 -1px 0 rgba(0,0,0,0.08);
+  --shadow-down: inset 0 1px 3px rgba(0,0,0,0.18), inset 0 1px 0 rgba(0,0,0,0.08);
+  --shadow-unit: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,24 +58,23 @@
 html, body, #root {
   width: 100%;
   min-height: 100%;
-  background: var(--cream);
+  background: var(--body-bg);
 }
 
 body {
-  font-family: var(--mono);
+  font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 40px 20px;
+  padding: 48px 20px;
 }
 
-button { cursor: pointer; border: none; background: none; }
-* { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+* { -webkit-tap-highlight-color: transparent; user-select: none; }
 
-/* marquee animation */
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+@media print {
+  body > * { display: none; }
+  .receipt-print { display: block !important; }
 }

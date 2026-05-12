@@ -35,9 +35,3 @@ export const PROGRAM: ProgramDay[] = [
     ],
   },
 ]
-
-export function buildMarquee(): string {
-  return PROGRAM.flatMap(day =>
-    [`— ${day.label.toUpperCase()} —`, ...day.events.map(e => `${e.time}  ${e.title}`)]
-  ).join('    ')
-}

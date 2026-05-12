@@ -7,8 +7,8 @@ export default function App() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '40px 20px',
-      background: 'var(--cream)',
+      padding: '48px 20px 120px',
+      background: 'var(--body-bg)',
     }}>
       <Device />
     </div>

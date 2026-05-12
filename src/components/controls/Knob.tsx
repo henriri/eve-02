@@ -1,15 +1,25 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { soundKnobTick, soundKnobSnap } from '../../sounds/useSounds'
 
 interface Props {
   label: string
   id: string
-  onActivate: (id: string, value: number) => void
+  stops?: number      // if set: snaps to N evenly spaced stops
+  onChange: (id: string, value: number) => void
 }
 
-export default function Knob({ label, id, onActivate }: Props) {
-  const [angle, setAngle] = useState(-135)  // -135 to +135 degrees
-  const dragging = useRef(false)
-  const lastY    = useRef(0)
+export default function Knob({ label, id, stops, onChange }: Props) {
+  const [angle, setAngle] = useState(-135)
+  const dragging  = useRef(false)
+  const lastY     = useRef(0)
+  const lastStop  = useRef(-1)
+
+  const snapAngle = (raw: number): number => {
+    if (!stops) return raw
+    const step = 270 / (stops - 1)
+    const snap = Math.round((raw + 135) / step) * step - 135
+    return Math.max(-135, Math.min(135, snap))
+  }
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     dragging.current = true
@@ -17,61 +27,108 @@ export default function Knob({ label, id, onActivate }: Props) {
     e.preventDefault()
   }, [])
 
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    dragging.current = true
+    lastY.current    = e.touches[0].clientY
+  }, [])
+
   useEffect(() => {
-    function onMouseMove(e: MouseEvent) {
+    function move(clientY: number) {
       if (!dragging.current) return
-      const delta = lastY.current - e.clientY
-      lastY.current = e.clientY
-      setAngle(a => {
-        const next = Math.max(-135, Math.min(135, a + delta * 2))
-        const norm = (next + 135) / 270  // 0..1
-        onActivate(id, norm)
+      const delta = lastY.current - clientY
+      lastY.current = clientY
+      setAngle(prev => {
+        const raw  = Math.max(-135, Math.min(135, prev + delta * 2.2))
+        const next = stops ? snapAngle(raw) : raw
+        const norm = (next + 135) / 270
+
+        if (stops) {
+          const stopIdx = Math.round(norm * (stops - 1))
+          if (stopIdx !== lastStop.current) {
+            lastStop.current = stopIdx
+            soundKnobSnap()
+            onChange(id, norm)
+          }
+        } else {
+          soundKnobTick(norm)
+          onChange(id, norm)
+        }
         return next
       })
     }
-    function onMouseUp() { dragging.current = false }
+    function onMouseMove(e: MouseEvent)  { move(e.clientY) }
+    function onTouchMove(e: TouchEvent)  { move(e.touches[0].clientY) }
+    function onUp() { dragging.current = false }
     window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup',   onMouseUp)
+    window.addEventListener('mouseup',   onUp)
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    window.addEventListener('touchend',  onUp)
     return () => {
       window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup',   onMouseUp)
+      window.removeEventListener('mouseup',   onUp)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend',  onUp)
     }
-  }, [id, onActivate])
+  }, [id, stops, onChange])
+
+  // tick marks ring
+  const ticks = Array.from({ length: 11 }, (_, i) => {
+    const a = -135 + i * 27
+    const r = 34
+    const rad = (a - 90) * Math.PI / 180
+    const x1 = 40 + Math.cos(rad) * (r - 4)
+    const y1 = 40 + Math.sin(rad) * (r - 4)
+    const x2 = 40 + Math.cos(rad) * r
+    const y2 = 40 + Math.sin(rad) * r
+    return { x1, y1, x2, y2, active: a <= angle }
+  })
 
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
-      <div
+      <svg width={80} height={80} style={{ overflow:'visible', cursor:'ns-resize' }}
         onMouseDown={onMouseDown}
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 35%, #d8d4cc, #888480)',
-          boxShadow: '0 3px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4)',
-          cursor: 'ns-resize',
-          position: 'relative',
-          userSelect: 'none',
-        }}
+        onTouchStart={onTouchStart}
       >
-        {/* indicator dot */}
-        <div style={{
-          position: 'absolute',
-          width: 4,
-          height: 4,
-          borderRadius: '50%',
-          background: 'var(--near-black)',
-          top: '50%',
-          left: '50%',
-          transformOrigin: '50% 50%',
-          transform: `rotate(${angle}deg) translateY(-15px) translate(-50%, -50%)`,
-        }} />
-      </div>
+        {/* tick marks */}
+        {ticks.map((tk, i) => (
+          <line key={i}
+            x1={tk.x1} y1={tk.y1} x2={tk.x2} y2={tk.y2}
+            stroke={tk.active ? 'var(--dark)' : 'var(--border)'}
+            strokeWidth={1.5}
+            strokeLinecap="round"
+          />
+        ))}
+        {/* knob body */}
+        <circle cx={40} cy={40} r={26}
+          fill="url(#knobGrad)"
+          filter="url(#knobShadow)"
+        />
+        {/* indicator line */}
+        <line
+          x1={40} y1={40}
+          x2={40 + Math.cos((angle - 90) * Math.PI / 180) * 18}
+          y2={40 + Math.sin((angle - 90) * Math.PI / 180) * 18}
+          stroke="var(--orange)"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+        />
+        <defs>
+          <radialGradient id="knobGrad" cx="38%" cy="32%" r="65%">
+            <stop offset="0%" stopColor="#3A3835" />
+            <stop offset="100%" stopColor="#1A1816" />
+          </radialGradient>
+          <filter id="knobShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="3" stdDeviation="4" floodOpacity="0.35" />
+            <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.2" />
+          </filter>
+        </defs>
+      </svg>
       <span style={{
-        fontSize: 8,
-        letterSpacing: '0.12em',
-        textTransform: 'uppercase',
-        color: 'var(--mid-grey)',
         fontFamily: 'var(--mono)',
+        fontSize: 8,
+        letterSpacing: '0.08em',
+        color: 'var(--light)',
+        textTransform: 'lowercase',
       }}>{label}</span>
     </div>
   )
