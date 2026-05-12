@@ -32,29 +32,32 @@ export default function Knob({ label, id, stops, onChange }: Props) {
     lastY.current    = e.touches[0].clientY
   }, [])
 
+  const angleRef = useRef(-135)
+
   useEffect(() => {
     function move(clientY: number) {
       if (!dragging.current) return
       const delta = lastY.current - clientY
       lastY.current = clientY
-      setAngle(prev => {
-        const raw  = Math.max(-135, Math.min(135, prev + delta * 2.2))
-        const next = stops ? snapAngle(raw) : raw
-        const norm = (next + 135) / 270
 
-        if (stops) {
-          const stopIdx = Math.round(norm * (stops - 1))
-          if (stopIdx !== lastStop.current) {
-            lastStop.current = stopIdx
-            soundKnobSnap()
-            onChange(id, norm)
-          }
-        } else {
-          soundKnobTick(norm)
+      const raw  = Math.max(-135, Math.min(135, angleRef.current + delta * 2.2))
+      const next = stops ? snapAngle(raw) : raw
+      const norm = (next + 135) / 270
+
+      angleRef.current = next
+      setAngle(next)
+
+      if (stops) {
+        const stopIdx = Math.round(norm * (stops - 1))
+        if (stopIdx !== lastStop.current) {
+          lastStop.current = stopIdx
+          soundKnobSnap()
           onChange(id, norm)
         }
-        return next
-      })
+      } else {
+        soundKnobTick(norm)
+        onChange(id, norm)
+      }
     }
     function onMouseMove(e: MouseEvent)  { move(e.clientY) }
     function onTouchMove(e: TouchEvent)  { move(e.touches[0].clientY) }

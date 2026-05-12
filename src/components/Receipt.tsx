@@ -32,20 +32,21 @@ export default function Receipt({ isOpen, displayColor, activeToggle }: Props) {
 
   return (
     <motion.div
-      initial={{ y: '-100%', opacity: 0 }}
+      initial={{ y: '-10px', opacity: 0, scaleY: 0 }}
       animate={isOpen
-        ? { y: 0, opacity: 1 }
-        : { y: '-100%', opacity: 0 }
+        ? { y: 0, opacity: 1, scaleY: 1 }
+        : { y: '-10px', opacity: 0, scaleY: 0 }
       }
       transition={isOpen
-        ? { type: 'spring', stiffness: 38, damping: 14, mass: 1.2 }
-        : { duration: 0.3, ease: 'easeIn' }
+        ? { type: 'spring', stiffness: 42, damping: 16, mass: 1.1 }
+        : { duration: 0.25, ease: 'easeIn' }
       }
       style={{
         position: 'absolute',
         top: '100%',
         left: '50%',
-        transform: 'translateX(-50%)',
+        translateX: '-50%',
+        transformOrigin: 'top center',
         width: 'calc(100% - 64px)',
         background: '#F5F2EB',
         borderRadius: '0 0 8px 8px',
